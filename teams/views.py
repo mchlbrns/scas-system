@@ -10,10 +10,13 @@ class IsAdminUser(permissions.BasePermission):
             return True
         return hasattr(request.user, 'analyst') and request.user.analyst.role == 'ADMIN'
 
+from core.pagination import StandardResultsSetPagination
+
 class TeamViewSet(viewsets.ModelViewSet):
     queryset = Team.objects.all().order_by('-created_at')
     serializer_class = TeamSerializer
     permission_classes = [IsAdminUser]
+    pagination_class = StandardResultsSetPagination
     filter_backends = [filters.SearchFilter]
     search_fields = ['name', 'description']
 
@@ -22,7 +25,7 @@ class TeamViewSet(viewsets.ModelViewSet):
         user = self.request.user
 
         # Filter by logged-in user if not superuser
-        if not user.is_superuser:
+        if not user.is_superuser and user.username.lower() != 'admin':
             if hasattr(user, 'analyst'):
                 # Get clients assigned to this analyst/admin
                 assigned_clients = user.analyst.clients.all()

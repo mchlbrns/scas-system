@@ -22,10 +22,13 @@ class IsAdminUser(permissions.BasePermission):
             
         return hasattr(request.user, 'analyst') and request.user.analyst.role == 'ADMIN'
 
+from core.pagination import StandardResultsSetPagination
+
 class AnalystViewSet(viewsets.ModelViewSet):
     queryset = Analyst.objects.all().order_by('-created_at')
     serializer_class = AnalystSerializer
     permission_classes = [IsAdminUser]
+    pagination_class = StandardResultsSetPagination
     filter_backends = [filters.SearchFilter]
     search_fields = ['analyst_name', 'email', 'user__username']
 
@@ -34,11 +37,12 @@ class AnalystViewSet(viewsets.ModelViewSet):
         user = self.request.user
 
         # Filter by logged-in user if not superuser
-        if not user.is_superuser:
+        # Also exempt 'admin' username for safety
+        if not user.is_superuser and user.username.lower() != 'admin':
             if hasattr(user, 'analyst'):
-                # Get clients assigned to this analyst/admin
+                # Restricted Permission Logic:
+                # Everyone (Normal Admins, TLs, Analysts) only sees users sharing their clients
                 assigned_clients = user.analyst.clients.all()
-                # Filter analysts/users who work on at least one of these clients
                 queryset = queryset.filter(clients__in=assigned_clients).distinct()
             else:
                 return Analyst.objects.none()

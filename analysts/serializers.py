@@ -4,6 +4,13 @@ from django.contrib.auth.models import User
 from clients.serializers import ClientSerializer
 from clients.models import Client
 
+from teams.models import Team
+
+class SimpleTeamSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Team
+        fields = ['id', 'name']
+
 class AnalystSerializer(serializers.ModelSerializer):
     role_display = serializers.CharField(source='get_role_display', read_only=True)
     username = serializers.CharField(source='user.username', read_only=True)
@@ -16,11 +23,17 @@ class AnalystSerializer(serializers.ModelSerializer):
     client_ids = serializers.PrimaryKeyRelatedField(
         many=True, write_only=True, queryset=Client.objects.all(), source='clients', required=False
     )
+    teams = SimpleTeamSerializer(many=True, read_only=True)
     
     class Meta:
         model = Analyst
-        fields = ['id', 'user', 'username', 'custom_username', 'password', 'analyst_name', 'role', 'role_display', 'email', 'clients', 'client_ids', 'is_active', 'created_at', 'updated_at']
+        fields = ['id', 'user', 'username', 'custom_username', 'password', 'analyst_name', 'role', 'role_display', 'email', 'clients', 'client_ids', 'teams', 'is_active', 'created_at', 'updated_at']
         read_only_fields = ['user']
+
+    def validate_analyst_name(self, value):
+        if value:
+            return value.title()
+        return value
 
     def create(self, validated_data):
         email = validated_data.get('email')

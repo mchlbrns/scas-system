@@ -33,4 +33,10 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         # However, the spec says 'Analyst' model exists. 
         # We need to link auth.User to analysts.Analyst if we want strict row-level security based on login.
         # For now, simplistic implementation.
+        # For now, simplistic implementation.
         return True 
+
+class IsSuperUser(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user and request.user.is_superuser
+

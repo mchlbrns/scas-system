@@ -4,3 +4,11 @@ djangorestframework-simplejwt
 django-filter
 mysqlclient
 django-cors-headers
+python-decouple
+
+# Testing
+pytest
+pytest-django
+pytest-cov
+factory-boy
+waitress

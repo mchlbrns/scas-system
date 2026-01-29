@@ -11,7 +11,7 @@ class ReceivableViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        queryset = Receivable.objects.all()
+        queryset = Receivable.objects.select_related('client', 'analyst').all()
 
         if user.is_superuser:
             return queryset

@@ -13,6 +13,12 @@ from payments.models import DailyPayment
 from ptp.models import DailyPTP
 from teams.models import Team
 
+from core.models import AuditLog
+from core.serializers import AuditLogSerializer
+from core.permissions import IsSuperUser
+from rest_framework import filters
+from django_filters.rest_framework import DjangoFilterBackend
+
 class DashboardViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
 
@@ -60,9 +66,13 @@ class DashboardViewSet(viewsets.ViewSet):
             
             client_id = request.query_params.get('client_id')
             analyst_id = request.query_params.get('analyst_id')
+            team_id = request.query_params.get('team_id')
 
             allowed_client_ids = self._get_allowed_client_ids(request.user)
             
+            # Restrict Analyst to their own data
+            if hasattr(request.user, 'analyst') and request.user.analyst.role == 'ANALYST':
+                analyst_id = str(request.user.analyst.id)
             filters = {}
             target_filters = {
                 'target_month__year': report_date.year,
@@ -117,6 +127,11 @@ class DashboardViewSet(viewsets.ViewSet):
             if analyst_id and analyst_id.isdigit():
                  filters['analyst_id'] = analyst_id
 
+            # Team filter
+            if team_id and team_id.isdigit():
+                 filters['client__teams__id'] = team_id
+                 target_filters['client__teams__id'] = team_id
+
             # Logic for aggregated summary
             pos_total = Receivable.objects.filter(report_date__year=report_date.year, report_date__month=report_date.month, **filters).aggregate(s=Sum('pos_amount'))['s'] or 0
             neg_total = Receivable.objects.filter(report_date__year=report_date.year, report_date__month=report_date.month, **filters).aggregate(s=Sum('neg_amount'))['s'] or 0
@@ -134,12 +149,34 @@ class DashboardViewSet(viewsets.ViewSet):
             
             # Target
             # Aggregate both targets
-            targets_agg = Target.objects.filter(**target_filters).aggregate(
-                internal=Sum('internal_target'),
-                client=Sum('client_target')
-            )
-            internal_target = targets_agg['internal'] or 0
-            client_target = targets_agg['client'] or 0
+            
+            # Use aggregated sum by default
+            internal_target = 0
+            client_target = 0
+            
+            if analyst_id and analyst_id.isdigit():
+                # If filtered by analyst, apply allocation logic
+                # Fetch targets relevant to current client/date filters
+                targets = Target.objects.filter(**target_filters).select_related('client').prefetch_related('client__analysts')
+                
+                check_analyst_id = int(analyst_id)
+                
+                for t in targets:
+                    # Check if this analyst is assigned to the client
+                    assigned_analysts = t.client.analysts.all()
+                    if any(a.id == check_analyst_id for a in assigned_analysts):
+                        count = len(assigned_analysts)
+                        if count > 0:
+                            internal_target += (t.internal_target / count)
+                            client_target += (t.client_target / count)
+            else:
+                # Standard aggregation (Total for selected clients)
+                targets_agg = Target.objects.filter(**target_filters).aggregate(
+                    internal=Sum('internal_target'),
+                    client=Sum('client_target')
+                )
+                internal_target = targets_agg['internal'] or 0
+                client_target = targets_agg['client'] or 0
             
             # Use client_target for achievement calculation as before, or switch to internal if preferred
             # Based on user request to show both, preserving original calculation logic using 'client_target' variable
@@ -155,14 +192,22 @@ class DashboardViewSet(viewsets.ViewSet):
             achievement = (payments_mtd / client_target * 100) if client_target > 0 else 0
             variance = payments_mtd - client_target 
 
-            # Real Trend Data (Aggregating last 7 days)
+            # Optimized Trend Data: Single query instead of 7
+            start_date = report_date - timedelta(days=6)
+            trend_payments = DailyPayment.objects.filter(
+                payment_date__gte=start_date,
+                payment_date__lte=report_date,
+                **filters
+            ).values('payment_date').annotate(s=Sum('amount'))
+            
+            trend_map = {x['payment_date']: x['s'] for x in trend_payments}
+            
             daily_trend = []
-            # Get targets for trend lines (daily average)
             daily_target = (client_target / last_day) if client_target > 0 else 0
             
             for i in range(6, -1, -1):
                 d = report_date - timedelta(days=i)
-                day_payments = DailyPayment.objects.filter(payment_date=d, **filters).aggregate(s=Sum('amount'))['s'] or 0
+                day_payments = trend_map.get(d, 0) or 0
                 daily_trend.append({
                     "date": d.strftime("%m-%d"),
                     "payments": float(day_payments),
@@ -200,12 +245,21 @@ class DashboardViewSet(viewsets.ViewSet):
             
             # Filter clients logic
             client_query = request.query_params.get('client_id')
+            team_id = request.query_params.get('team_id')
             client_filter = {'is_active': True}
             
             allowed_client_ids = self._get_allowed_client_ids(request.user)
             
+            # Restrict Analyst to their own data
+            current_analyst_id = None
+            if hasattr(request.user, 'analyst') and request.user.analyst.role == 'ANALYST':
+                current_analyst_id = request.user.analyst.id
+            
             if allowed_client_ids is not None:
                  client_filter['id__in'] = allowed_client_ids
+            
+            if team_id and team_id.isdigit():
+                 client_filter['teams__id'] = team_id
             
             if client_query:
                 if client_query.isdigit():
@@ -230,6 +284,9 @@ class DashboardViewSet(viewsets.ViewSet):
             base_filters = {}
             if allowed_client_ids is not None:
                 base_filters['client__in'] = allowed_client_ids
+            
+            if current_analyst_id:
+                base_filters['analyst_id'] = current_analyst_id
                 
             pay_mtd = DailyPayment.objects.filter(payment_date__gte=month_start, payment_date__lte=report_date, **base_filters).values('client').annotate(s=Sum('amount'))
             pay_mtd_map = {x['client']: x['s'] for x in pay_mtd}
@@ -283,6 +340,7 @@ class DashboardViewSet(viewsets.ViewSet):
             print(traceback.format_exc())
             return response.Response({"error": str(e), "trace": traceback.format_exc()}, status=500)
 
+
     @action(detail=False, methods=['get'])
     def analysts(self, request):
         report_date = self._get_date(request)
@@ -293,11 +351,19 @@ class DashboardViewSet(viewsets.ViewSet):
         if allowed_client_ids is not None:
              base_filters['client__in'] = allowed_client_ids
         
+        # Restrict Analyst to their own data
+        if hasattr(request.user, 'analyst') and request.user.analyst.role == 'ANALYST':
+            base_filters['analyst_id'] = request.user.analyst.id
+        
         analyst_filter = {'is_active': True, 'role': 'ANALYST'}
         if allowed_client_ids is not None:
              analyst_filter['clients__id__in'] = allowed_client_ids
+
+        if hasattr(request.user, 'analyst') and request.user.analyst.role == 'ANALYST':
+            analyst_filter['id'] = request.user.analyst.id
         
-        analysts = Analyst.objects.filter(**analyst_filter).distinct()
+        # Prefetch clients to allow target calculation
+        analysts = Analyst.objects.filter(**analyst_filter).prefetch_related('clients').distinct()
         month_start = report_date.replace(day=1)
         
         pay_mtd = DailyPayment.objects.filter(payment_date__gte=month_start, payment_date__lte=report_date, **base_filters).values('analyst').annotate(s=Sum('amount'))
@@ -309,11 +375,27 @@ class DashboardViewSet(viewsets.ViewSet):
         rec = Receivable.objects.filter(report_date__year=report_date.year, report_date__month=report_date.month, **base_filters).values('analyst').annotate(p=Sum('pos_amount'))
         rec_map = {x['analyst']: x['p'] for x in rec}
 
+        # Fetch targets for the month
+        targets = Target.objects.filter(target_month__year=report_date.year, target_month__month=report_date.month).values('client', 'internal_target')
+        target_map = {x['client']: x['internal_target'] for x in targets}
+
         data = []
         for a in analysts:
             pmtd = pay_map.get(a.id, 0)
-            target = 0 
-            achieve = 0
+            
+            # Calculate target by summing targets of assigned clients
+            # Only include clients that are visible to the current user (if restricted)
+            analyst_target = 0
+            for client in a.clients.all():
+                 if allowed_client_ids is None or client.id in allowed_client_ids:
+                     c_target = target_map.get(client.id, 0) or 0
+                     # Split target among all analysts assigned to this client
+                     num_analysts = client.analysts.count()
+                     if num_analysts > 0:
+                         analyst_target += (c_target / num_analysts)
+            
+            target = analyst_target
+            achieve = (pmtd / target * 100) if target > 0 else 0
             
             data.append({
                 "id": a.id,
@@ -327,58 +409,14 @@ class DashboardViewSet(viewsets.ViewSet):
             
         return response.Response(data)
 
-    @action(detail=False, methods=['get'])
-    def teams(self, request):
-        report_date = self._get_date(request)
-        if not report_date: return response.Response({"error": "Invalid date"}, status=400)
 
-        allowed_client_ids = self._get_allowed_client_ids(request.user)
-        base_filters = {}
-        if allowed_client_ids is not None:
-             base_filters['client__in'] = allowed_client_ids
-        
-        team_filter = {'is_active': True}
-        if allowed_client_ids is not None:
-             team_filter['members__clients__id__in'] = allowed_client_ids
+class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated, IsSuperUser]
+    queryset = AuditLog.objects.all()
+    serializer_class = AuditLogSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['action', 'target_model', 'actor__username']
+    search_fields = ['details', 'object_id', 'target_model', 'action']
+    ordering_fields = ['timestamp']
 
-        teams = Team.objects.filter(**team_filter).prefetch_related('members').distinct()
-        month_start = report_date.replace(day=1)
-        
-        # We need to aggregate performance for all members of each team
-        # Pre-fetch all performance data mapped by analyst_id
-        
-        pay_mtd = DailyPayment.objects.filter(payment_date__gte=month_start, payment_date__lte=report_date, **base_filters).values('analyst').annotate(s=Sum('amount'))
-        pay_map = {x['analyst']: x['s'] for x in pay_mtd}
-        
-        pay_today = DailyPayment.objects.filter(payment_date=report_date, **base_filters).values('analyst').annotate(s=Sum('amount'))
-        pay_today_map = {x['analyst']: x['s'] for x in pay_today}
-        
-        rec = Receivable.objects.filter(report_date__year=report_date.year, report_date__month=report_date.month, **base_filters).values('analyst').annotate(p=Sum('pos_amount'))
-        rec_map = {x['analyst']: x['p'] for x in rec}
 
-        data = []
-        for t in teams:
-            team_pos = 0
-            team_pay_today = 0
-            team_pay_mtd = 0
-            
-            for member in t.members.all():
-                team_pos += rec_map.get(member.id, 0) or 0
-                team_pay_today += pay_today_map.get(member.id, 0) or 0
-                team_pay_mtd += pay_map.get(member.id, 0) or 0
-            
-            target = 0 # Future: Sum of member targets?
-            achieve = 0
-            
-            data.append({
-                "id": t.id,
-                "name": t.name,
-                "lead_analyst": t.team_lead.analyst_name if t.team_lead else 'N/A',
-                "total_pos_amount": team_pos,
-                "payments_today": team_pay_today,
-                "mtd_payments": team_pay_mtd,
-                "target": target,
-                "achievement": achieve
-            })
-            
-        return response.Response(data)

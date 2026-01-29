@@ -122,30 +122,64 @@ class DailyCollectionEntryView(APIView):
             if not user.analyst.clients.filter(id=client_id).exists():
                  return Response({"error": "You do not have permission to edit this client"}, status=status.HTTP_403_FORBIDDEN)
 
+        # Track changes for audit log
+        changes_log = []
+
         for entry in entries:
             analyst_id = entry.get('analyst_id')
-            payment_amount = entry.get('payment_amount', 0)
-            ptp_amount = entry.get('ptp_amount', 0)
+            payment_amount = float(entry.get('payment_amount', 0))
+            ptp_amount = float(entry.get('ptp_amount', 0))
 
             try:
                 analyst = Analyst.objects.get(id=analyst_id)
             except Analyst.DoesNotExist:
                 continue
+            
+            # Fetch existing to compare
+            existing_payment = DailyPayment.objects.filter(
+                client=client, analyst=analyst, payment_date=target_date
+            ).first()
+            old_payment = float(existing_payment.amount) if existing_payment else 0.0
 
-            # Update or Create DailyPayment
-            DailyPayment.objects.update_or_create(
-                client=client,
-                analyst=analyst,
-                payment_date=target_date,
-                defaults={'amount': payment_amount}
-            )
+            existing_ptp = DailyPTP.objects.filter(
+                client=client, analyst=analyst, ptp_date=target_date
+            ).first()
+            old_ptp = float(existing_ptp.ptp_amount) if existing_ptp else 0.0
 
-            # Update or Create DailyPTP
-            DailyPTP.objects.update_or_create(
-                client=client,
-                analyst=analyst,
-                ptp_date=target_date,
-                defaults={'ptp_amount': ptp_amount}
-            )
+            # Check if actual changes occurred
+            if old_payment != payment_amount or old_ptp != ptp_amount:
+                change_record = {
+                    'analyst': analyst.analyst_name,
+                }
+                if old_payment != payment_amount:
+                    change_record['payment'] = {'old': old_payment, 'new': payment_amount}
+                if old_ptp != ptp_amount:
+                    change_record['ptp'] = {'old': old_ptp, 'new': ptp_amount}
+                
+                changes_log.append(change_record)
+
+                # Update or Create DailyPayment
+                DailyPayment.objects.update_or_create(
+                    client=client,
+                    analyst=analyst,
+                    payment_date=target_date,
+                    defaults={'amount': payment_amount}
+                )
+
+                # Update or Create DailyPTP
+                DailyPTP.objects.update_or_create(
+                    client=client,
+                    analyst=analyst,
+                    ptp_date=target_date,
+                    defaults={'ptp_amount': ptp_amount}
+                )
+
+        # Force audit log action
+        if hasattr(request, '_request'):
+             request._request._audit_action = 'UPDATED'
+             request._request._audit_details = {'entries_changed': changes_log} if changes_log else {'message': 'No changes detected'}
+        else:
+             request._audit_action = 'UPDATED'
+             request._audit_details = {'entries_changed': changes_log} if changes_log else {'message': 'No changes detected'}
 
         return Response({"status": "success"})

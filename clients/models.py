@@ -2,7 +2,7 @@ from django.db import models
 
 class Client(models.Model):
     client_code = models.CharField(max_length=50, unique=True, null=True)  # Nullable first to allow migration of existing rows
-    client_name = models.CharField(max_length=100)
+    client_name = models.CharField(max_length=100, unique=True)
     email = models.EmailField(null=True, blank=True)
     contact_person = models.CharField(max_length=100, null=True, blank=True)
     remarks = models.TextField(null=True, blank=True)
