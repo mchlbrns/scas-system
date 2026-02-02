@@ -5,7 +5,7 @@ Records successful execution patterns, learned behaviors, and newly synthesized 
 
 ## Project Context (SCASI/DCMS)
 
-> **Last Initialized**: 2026-01-29T15:37:15+08:00
+> **Last Initialized**: 2026-02-02T09:39:34+08:00
 
 ### Stack Summary
 | Layer | Technology | Version |
@@ -47,6 +47,7 @@ npm run test
 - `django_test_specialist.skill.md`: Executes and debugs Django tests.
 - `vitest_runner.skill.md`: Executes and debugs Frontend (Vitest) tests.
 - `git_orchestrator.skill.md`: Automates GitHub synchronization and restoration.
+- `file_ingestion_specialist.skill.md`: Handles robust Excel/CSV parsing and atomic batch imports.
 
 ## Learned Patterns
 | ID | Pattern Description | Success Rate | Last Used |

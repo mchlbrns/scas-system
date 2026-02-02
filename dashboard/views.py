@@ -372,6 +372,9 @@ class DashboardViewSet(viewsets.ViewSet):
         pay_today = DailyPayment.objects.filter(payment_date=report_date, **base_filters).values('analyst').annotate(s=Sum('amount'))
         pay_today_map = {x['analyst']: x['s'] for x in pay_today}
         
+        ptp_today = DailyPTP.objects.filter(ptp_date=report_date, **base_filters).values('analyst').annotate(s=Sum('ptp_amount'))
+        ptp_today_map = {x['analyst']: x['s'] for x in ptp_today}
+        
         rec = Receivable.objects.filter(report_date__year=report_date.year, report_date__month=report_date.month, **base_filters).values('analyst').annotate(p=Sum('pos_amount'))
         rec_map = {x['analyst']: x['p'] for x in rec}
 
@@ -401,6 +404,7 @@ class DashboardViewSet(viewsets.ViewSet):
                 "id": a.id,
                 "name": a.analyst_name,
                 "total_pos_amount": rec_map.get(a.id, 0),
+                "ptp_today": ptp_today_map.get(a.id, 0),
                 "payments_today": pay_today_map.get(a.id, 0),
                 "mtd_payments": pmtd,
                 "target": target,

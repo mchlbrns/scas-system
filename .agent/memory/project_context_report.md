@@ -1,22 +1,23 @@
 # Project Context Report
-**Generated:** 2026-01-29T13:25:33+08:00
+**Generated:** 2026-02-02T08:57:05+08:00
 **Status:** Calibrated
 
 ## Technical Stack
-- **Backend:** Python, Django, Rest Framework (DRF)
-  - Testing: pytest
-  - Dependency Management: pip (requirements.txt)
+- **Backend:** Python, Django 4.2+, Django REST Framework
+  - Testing: pytest, factory-boy
+  - Auth: SimpleJWT
+  - Database: MySQL (mysqlclient)
 - **Frontend:** TypeScript, Next.js 16 (React 19), Tailwind CSS 4
-  - Testing: Vitest
+  - Testing: Vitest, React Testing Library
   - State Management: Zustand
   - Data Fetching: TanStack Query
-- **Database:** MySQL (inferred from user rules)
+- **Database:** MySQL
 
 ## Detected Conventions
 - **Django**: Top-level app structure (`core`, `analysts`, `clients`, etc.).
 - **Next.js**: App Router structure (`frontend/app`).
-- **Styling**: Tailwind CSS usage.
-- **Linting**: ESLint detected in frontend.
+- **Styling**: Tailwind CSS classes.
+- **Linting**: ESLint (frontend).
 
 ## Agent Calibration
 - **Skills**: Verified match (Django, React, Vitest skills present).

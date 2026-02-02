@@ -82,6 +82,7 @@ The agent currently possesses the following skills:
 | **Vitest Runner** (`vitest_runner.skill.md`) | Specializes in executing/debugging frontend tests using Vitest. | Test Targets, Context |
 | **Datatable Master** (`datatable_master.skill.md`) | Standardizes DataTable layouts, sorting, and user interactions across administrative pages. | Component Files |
 | **Git Orchestrator** (`git_orchestrator.skill.md`) | Automates GitHub synchronization and restoration using project-specific scripts. | Action, Message |
+| **Browser Automation** (`browser_automation.skill.md`) | Automates browser interactions for testing and verification using the built-in Antigravity IDE Browser Agent. | Url, Interactions |
 
 ## Workflows
 The agent executes tasks using these workflows:
@@ -121,4 +122,4 @@ To interact with the Nexus system:
 5.  **Evolution**: If the agent encounters a problem it can't solve, it triggers the `Autonomous Improvement` workflow to build the tool it needs.
 
 ---
-*This document is automatically maintained by the `documentation_updater` skill. Last updated by Nexus on 2026-01-29 10:54.*
+*This document is automatically maintained by the `documentation_updater` skill. Last updated by Nexus on 2026-02-02 09:39.*

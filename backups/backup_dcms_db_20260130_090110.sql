@@ -17,6 +17,169 @@
 /*M!100616 SET @OLD_NOTE_VERBOSITY=@@NOTE_VERBOSITY, NOTE_VERBOSITY=0 */;
 
 --
+-- Table structure for table `accounts_account`
+--
+
+DROP TABLE IF EXISTS `accounts_account`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `accounts_account` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `account_number` varchar(100) NOT NULL,
+  `account_name` varchar(255) NOT NULL,
+  `endorsement_date` date NOT NULL,
+  `recall_date` date DEFAULT NULL,
+  `outstanding_balance` decimal(15,2) NOT NULL,
+  `status` varchar(20) NOT NULL,
+  `data_payload` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`data_payload`)),
+  `created_at` datetime(6) NOT NULL,
+  `updated_at` datetime(6) NOT NULL,
+  `assigned_analyst_id` bigint(20) DEFAULT NULL,
+  `client_id` bigint(20) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `accounts_account_client_id_account_number_cf30cfc1_uniq` (`client_id`,`account_number`),
+  KEY `accounts_account_assigned_analyst_id_69443868_fk_analysts_` (`assigned_analyst_id`),
+  KEY `accounts_account_account_number_441b7708` (`account_number`),
+  CONSTRAINT `accounts_account_assigned_analyst_id_69443868_fk_analysts_` FOREIGN KEY (`assigned_analyst_id`) REFERENCES `analysts_analyst` (`id`),
+  CONSTRAINT `accounts_account_client_id_0eee4856_fk_clients_client_id` FOREIGN KEY (`client_id`) REFERENCES `clients_client` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=20525 DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `accounts_account`
+--
+
+LOCK TABLES `accounts_account` WRITE;
+/*!40000 ALTER TABLE `accounts_account` DISABLE KEYS */;
+set autocommit=0;
+/*!40000 ALTER TABLE `accounts_account` ENABLE KEYS */;
+UNLOCK TABLES;
+commit;
+
+--
+-- Table structure for table `accounts_columnmapping`
+--
+
+DROP TABLE IF EXISTS `accounts_columnmapping`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `accounts_columnmapping` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `csv_header` varchar(255) NOT NULL,
+  `target_field` varchar(50) NOT NULL,
+  `data_type` varchar(20) NOT NULL,
+  `is_required` tinyint(1) NOT NULL,
+  `default_value` varchar(255) DEFAULT NULL,
+  `schema_id` bigint(20) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `accounts_columnmapping_schema_id_csv_header_27f32523_uniq` (`schema_id`,`csv_header`),
+  CONSTRAINT `accounts_columnmappi_schema_id_107f7303_fk_accounts_` FOREIGN KEY (`schema_id`) REFERENCES `accounts_importschema` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=176 DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `accounts_columnmapping`
+--
+
+LOCK TABLES `accounts_columnmapping` WRITE;
+/*!40000 ALTER TABLE `accounts_columnmapping` DISABLE KEYS */;
+set autocommit=0;
+INSERT INTO `accounts_columnmapping` VALUES
+(118,'Endo Type','data_payload','STRING',0,NULL,2),
+(119,'EndoDate','endorsement_date','DATE',1,NULL,2),
+(120,'RecallDate','recall_date','DATE',1,NULL,2),
+(121,'OSB','outstanding_balance','DECIMAL',1,NULL,2),
+(122,'Portfolio','data_payload','STRING',0,NULL,2),
+(123,'Account Number','account_number','DECIMAL',1,NULL,2),
+(124,'Invoice/Card','data_payload','DECIMAL',0,NULL,2),
+(125,'Account Name','account_name','STRING',0,NULL,2),
+(126,'Mother\'s Maiden Name','data_payload','STRING',0,NULL,2),
+(127,'Gender','data_payload','STRING',0,NULL,2),
+(128,'Birth Date','data_payload','STRING',0,NULL,2),
+(129,'Address','data_payload','STRING',0,NULL,2),
+(130,'Address2','data_payload','STRING',0,NULL,2),
+(131,'Contact Number1','data_payload','STRING',0,NULL,2),
+(132,'Contact Number2','data_payload','STRING',0,NULL,2),
+(133,'Contact Number3','data_payload','STRING',0,NULL,2),
+(134,'Contact Number4','data_payload','STRING',0,NULL,2),
+(135,'Email Add1','data_payload','STRING',0,NULL,2),
+(136,'Email Add2','data_payload','STRING',0,NULL,2),
+(137,'Currency_Code','data_payload','STRING',0,NULL,2),
+(138,'Loan Date','data_payload','STRING',0,NULL,2),
+(139,'Credit_Limit','data_payload','STRING',0,NULL,2),
+(140,'Overdue Balance','data_payload','STRING',0,NULL,2),
+(141,'Interest','data_payload','STRING',0,NULL,2),
+(142,'Charges','data_payload','STRING',0,NULL,2),
+(143,'Principal','data_payload','STRING',0,NULL,2),
+(144,'LAST_PURCHASE_DATE','data_payload','STRING',0,NULL,2),
+(145,'LAST CASH ADVANCE AMOUNT','data_payload','STRING',0,NULL,2),
+(146,'Last Payment Amount','data_payload','STRING',0,NULL,2),
+(147,'LastPayDate','data_payload','STRING',0,NULL,2),
+(148,'WriteOffDate','data_payload','STRING',0,NULL,2),
+(149,'WO_PRINCIPAL','data_payload','STRING',0,NULL,2),
+(150,'Loan Product','data_payload','STRING',0,NULL,2),
+(151,'Item','data_payload','STRING',0,NULL,2),
+(152,'Last Collection Agency','data_payload','STRING',0,NULL,2),
+(153,'Last Agency Date','data_payload','STRING',0,NULL,2),
+(154,'Nationality','data_payload','STRING',0,NULL,2),
+(155,'ID Type 1','data_payload','STRING',0,NULL,2),
+(156,'ID Num 1','data_payload','STRING',0,NULL,2),
+(157,'ID Type 2','data_payload','STRING',0,NULL,2),
+(158,'ID Num 2','data_payload','STRING',0,NULL,2),
+(159,'ID Type 3','data_payload','STRING',0,NULL,2),
+(160,'ID Num 3','data_payload','STRING',0,NULL,2),
+(161,'Company Name','data_payload','STRING',0,NULL,2),
+(162,'Address_1','data_payload','STRING',0,NULL,2),
+(163,'Company Phone No 1','data_payload','STRING',0,NULL,2),
+(164,'Company Phone No 2','data_payload','STRING',0,NULL,2),
+(165,'Email1','data_payload','STRING',0,NULL,2),
+(166,'Email2','data_payload','STRING',0,NULL,2),
+(167,'Occupation','data_payload','STRING',0,NULL,2),
+(168,'VerifiedGrossIncome','data_payload','STRING',0,NULL,2),
+(169,'Reference Contact Name','data_payload','STRING',0,NULL,2),
+(170,'Reference Contact Phone Number','data_payload','STRING',0,NULL,2),
+(171,'Office Contact Person / Authorized Third Party','data_payload','STRING',0,NULL,2),
+(172,'Guarantor Name','data_payload','STRING',0,NULL,2),
+(173,'Address_2','data_payload','STRING',0,NULL,2),
+(174,'Guarantor Phone Number','data_payload','STRING',0,NULL,2),
+(175,'Additional_Info','data_payload','STRING',0,NULL,2);
+/*!40000 ALTER TABLE `accounts_columnmapping` ENABLE KEYS */;
+UNLOCK TABLES;
+commit;
+
+--
+-- Table structure for table `accounts_importschema`
+--
+
+DROP TABLE IF EXISTS `accounts_importschema`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `accounts_importschema` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `is_active` tinyint(1) NOT NULL,
+  `created_at` datetime(6) NOT NULL,
+  `client_id` bigint(20) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `accounts_importschema_client_id_name_ac959bf7_uniq` (`client_id`,`name`),
+  CONSTRAINT `accounts_importschema_client_id_679c3ec7_fk_clients_client_id` FOREIGN KEY (`client_id`) REFERENCES `clients_client` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `accounts_importschema`
+--
+
+LOCK TABLES `accounts_importschema` WRITE;
+/*!40000 ALTER TABLE `accounts_importschema` DISABLE KEYS */;
+set autocommit=0;
+INSERT INTO `accounts_importschema` VALUES
+(2,'COLLECTIUS MASTERLIST',1,'2026-01-29 08:32:13.033524',11);
+/*!40000 ALTER TABLE `accounts_importschema` ENABLE KEYS */;
+UNLOCK TABLES;
+commit;
+
+--
 -- Table structure for table `analysts_analyst`
 --
 
@@ -419,7 +582,7 @@ CREATE TABLE `auth_permission` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `auth_permission_content_type_id_codename_01ab375a_uniq` (`content_type_id`,`codename`),
   CONSTRAINT `auth_permission_content_type_id_2f476e4b_fk_django_co` FOREIGN KEY (`content_type_id`) REFERENCES `django_content_type` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=69 DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=81 DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -497,7 +660,19 @@ INSERT INTO `auth_permission` VALUES
 (65,'Can add audit log',17,'add_auditlog'),
 (66,'Can change audit log',17,'change_auditlog'),
 (67,'Can delete audit log',17,'delete_auditlog'),
-(68,'Can view audit log',17,'view_auditlog');
+(68,'Can view audit log',17,'view_auditlog'),
+(69,'Can add account',18,'add_account'),
+(70,'Can change account',18,'change_account'),
+(71,'Can delete account',18,'delete_account'),
+(72,'Can view account',18,'view_account'),
+(73,'Can add column mapping',19,'add_columnmapping'),
+(74,'Can change column mapping',19,'change_columnmapping'),
+(75,'Can delete column mapping',19,'delete_columnmapping'),
+(76,'Can view column mapping',19,'view_columnmapping'),
+(77,'Can add import schema',20,'add_importschema'),
+(78,'Can change import schema',20,'change_importschema'),
+(79,'Can delete import schema',20,'delete_importschema'),
+(80,'Can view import schema',20,'view_importschema');
 /*!40000 ALTER TABLE `auth_permission` ENABLE KEYS */;
 UNLOCK TABLES;
 commit;
@@ -795,7 +970,7 @@ CREATE TABLE `core_auditlog` (
   PRIMARY KEY (`id`),
   KEY `core_auditlog_actor_id_ab091f3c_fk_auth_user_id` (`actor_id`),
   CONSTRAINT `core_auditlog_actor_id_ab091f3c_fk_auth_user_id` FOREIGN KEY (`actor_id`) REFERENCES `auth_user` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=77 DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=103 DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -805,53 +980,6 @@ CREATE TABLE `core_auditlog` (
 LOCK TABLES `core_auditlog` WRITE;
 /*!40000 ALTER TABLE `core_auditlog` DISABLE KEYS */;
 set autocommit=0;
-INSERT INTO `core_auditlog` VALUES
-(31,'LOGIN','User','1','{\"message\": \"User logged in successfully\"}','192.168.0.62','2026-01-28 06:48:14.734712',1),
-(32,'LOGIN','User','1','{\"message\": \"User logged in successfully\"}','192.168.0.62','2026-01-28 06:48:25.471408',1),
-(33,'LOGIN','User','1','{\"message\": \"User logged in successfully\"}','192.168.0.62','2026-01-28 06:48:32.646516',1),
-(34,'LOGIN','User','1','{\"message\": \"User logged in successfully\"}','192.168.0.62','2026-01-28 06:48:34.034929',1),
-(35,'LOGIN','User','1','{\"message\": \"User logged in successfully\"}','192.168.0.62','2026-01-28 06:48:41.873022',1),
-(36,'LOGIN','User','1','{\"message\": \"User logged in successfully\"}','192.168.0.62','2026-01-28 06:48:48.458302',1),
-(37,'LOGIN','User','1','{\"message\": \"User logged in successfully\"}','192.168.0.62','2026-01-28 06:48:50.482774',1),
-(38,'LOGIN','User','1','{\"message\": \"User logged in successfully\"}','192.168.0.62','2026-01-28 06:48:50.955803',1),
-(39,'LOGIN','User','1','{\"message\": \"User logged in successfully\"}','192.168.0.62','2026-01-28 06:50:44.058668',1),
-(40,'LOGIN','User','1','{\"message\": \"User logged in successfully\"}','192.168.0.62','2026-01-28 06:52:40.765397',1),
-(41,'LOGIN','User','1','{\"message\": \"User logged in successfully\"}','192.168.0.62','2026-01-28 06:52:42.588345',1),
-(42,'LOGIN','User','1','{\"message\": \"User logged in successfully\"}','192.168.0.62','2026-01-28 06:53:03.998190',1),
-(43,'LOGIN','User','1','{\"message\": \"User logged in successfully\"}','192.168.0.62','2026-01-28 06:53:04.897534',1),
-(44,'LOGIN','User','1','{\"message\": \"User logged in successfully\"}','192.168.0.62','2026-01-28 06:53:37.787749',1),
-(45,'LOGIN','User','1','{\"message\": \"User logged in successfully\"}','192.168.0.62','2026-01-28 07:01:45.972583',1),
-(46,'LOGIN','User','1','{\"message\": \"User logged in successfully\"}','192.168.0.62','2026-01-28 07:01:53.867597',1),
-(47,'LOGIN','User','1','{\"message\": \"User logged in successfully\"}','192.168.0.62','2026-01-28 07:01:55.987873',1),
-(48,'LOGIN','User','1','{\"message\": \"User logged in successfully\"}','192.168.0.62','2026-01-28 07:05:32.455501',1),
-(49,'LOGIN','User','1','{\"message\": \"User logged in successfully\"}','192.168.0.62','2026-01-28 07:11:01.491695',1),
-(50,'LOGIN','User','1','{\"message\": \"User logged in successfully\"}','192.168.0.62','2026-01-28 07:11:09.019427',1),
-(51,'LOGIN','User','1','{\"message\": \"User logged in successfully\"}','192.168.0.62','2026-01-28 07:11:22.182545',1),
-(52,'POST','Target',NULL,'{\"body\": {\"client\": 14, \"target_month\": \"2026-01-01\", \"internal_target\": 0, \"client_target\": 0}, \"status_code\": 201, \"path\": \"/api/v1/targets/\"}','192.168.0.62','2026-01-28 08:01:38.631908',10),
-(53,'PATCH','Receivable','4','{\"body\": {\"client\": 14, \"analyst\": 7, \"report_date\": \"2026-01-01\", \"pos_account_count\": 0, \"pos_amount\": 0, \"neg_account_count\": 0, \"neg_amount\": 0}, \"status_code\": 200, \"path\": \"/api/v1/receivables/4/\"}','192.168.0.62','2026-01-28 08:01:38.632732',10),
-(54,'PATCH','Receivable','6','{\"body\": {\"client\": 12, \"analyst\": 7, \"report_date\": \"2026-01-01\", \"pos_account_count\": 0, \"pos_amount\": 0, \"neg_account_count\": 0, \"neg_amount\": 0}, \"status_code\": 200, \"path\": \"/api/v1/receivables/6/\"}','192.168.0.62','2026-01-28 08:01:41.961445',10),
-(55,'PATCH','Target','2','{\"body\": {\"client\": 12, \"target_month\": \"2026-01-01\", \"internal_target\": 0, \"client_target\": 0}, \"status_code\": 200, \"path\": \"/api/v1/targets/2/\"}','192.168.0.62','2026-01-28 08:01:41.964308',10),
-(56,'PATCH','Target','1','{\"body\": {\"client\": 11, \"target_month\": \"2026-01-01\", \"internal_target\": 2500000, \"client_target\": 1500000}, \"status_code\": 200, \"path\": \"/api/v1/targets/1/\"}','192.168.0.62','2026-01-28 08:03:08.319576',10),
-(57,'PATCH','Receivable','11','{\"body\": {\"client\": 11, \"analyst\": 7, \"report_date\": \"2026-01-01\", \"pos_account_count\": 1606, \"pos_amount\": 160302870.36, \"neg_account_count\": 11613, \"neg_amount\": 1017739000.34}, \"status_code\": 200, \"path\": \"/api/v1/receivables/11/\"}','192.168.0.62','2026-01-28 08:03:08.322557',10),
-(58,'UPDATED','Payment',NULL,'{\"entries_changed\": [{\"analyst\": \"Aileen Santos\", \"payment\": {\"old\": 0.0, \"new\": 192307.69}, \"ptp\": {\"old\": 0.0, \"new\": 192307.69}}], \"status_code\": 200, \"path\": \"/api/v1/payments/daily-entry/\"}','192.168.0.62','2026-01-28 08:25:56.645712',10),
-(59,'UPDATED','Payment',NULL,'{\"entries_changed\": [{\"analyst\": \"Aileen Santos\", \"payment\": {\"old\": 192307.69, \"new\": 110000.69}, \"ptp\": {\"old\": 192307.69, \"new\": 110000.69}}], \"status_code\": 200, \"path\": \"/api/v1/payments/daily-entry/\"}','192.168.0.62','2026-01-28 08:26:11.785795',10),
-(60,'UPDATED','Payment',NULL,'{\"entries_changed\": [{\"analyst\": \"Jerald Villacorta\", \"payment\": {\"old\": 0.0, \"new\": 1382451.31}, \"ptp\": {\"old\": 0.0, \"new\": 1382451.31}}], \"status_code\": 200, \"path\": \"/api/v1/payments/daily-entry/\"}','192.168.0.62','2026-01-28 08:27:35.647763',10),
-(61,'UPDATED','Payment',NULL,'{\"entries_changed\": [{\"analyst\": \"Jordan Yaon\", \"payment\": {\"old\": 0.0, \"new\": 1382451.31}, \"ptp\": {\"old\": 0.0, \"new\": 1382451.31}}], \"status_code\": 200, \"path\": \"/api/v1/payments/daily-entry/\"}','192.168.0.62','2026-01-28 08:28:05.058031',10),
-(62,'LOGIN','User','1','{\"message\": \"User logged in successfully\"}','192.168.0.62','2026-01-29 00:17:24.154705',1),
-(63,'LOGIN','User','66','{\"message\": \"User logged in successfully\"}','192.168.0.62','2026-01-29 00:18:29.775288',66),
-(64,'LOGOUT','User','66','{\"message\": \"User logged out successfully\"}','192.168.0.62','2026-01-29 00:18:57.775011',66),
-(65,'LOGIN','User','10','{\"message\": \"User logged in successfully\"}','192.168.0.62','2026-01-29 00:19:04.879035',10),
-(66,'POST','Target',NULL,'{\"body\": {\"client\": 2, \"target_month\": \"2026-01-01\", \"internal_target\": 0, \"client_target\": 0}, \"status_code\": 201, \"path\": \"/api/v1/targets/\"}','192.168.0.62','2026-01-29 00:21:39.023700',1),
-(67,'PATCH','Receivable','8','{\"body\": {\"client\": 2, \"analyst\": 12, \"report_date\": \"2026-01-01\", \"pos_account_count\": 0, \"pos_amount\": 0, \"neg_account_count\": 0, \"neg_amount\": 0}, \"status_code\": 200, \"path\": \"/api/v1/receivables/8/\"}','192.168.0.62','2026-01-29 00:21:39.029963',1),
-(68,'POST','Target',NULL,'{\"body\": {\"client\": 3, \"target_month\": \"2026-01-01\", \"internal_target\": 0, \"client_target\": 0}, \"status_code\": 201, \"path\": \"/api/v1/targets/\"}','192.168.0.62','2026-01-29 00:21:39.510660',1),
-(69,'PATCH','Receivable','9','{\"body\": {\"client\": 3, \"analyst\": 12, \"report_date\": \"2026-01-01\", \"pos_account_count\": 0, \"pos_amount\": 0, \"neg_account_count\": 0, \"neg_amount\": 0}, \"status_code\": 200, \"path\": \"/api/v1/receivables/9/\"}','192.168.0.62','2026-01-29 00:21:39.514398',1),
-(70,'POST','Target',NULL,'{\"body\": {\"client\": 4, \"target_month\": \"2026-01-01\", \"internal_target\": 0, \"client_target\": 0}, \"status_code\": 201, \"path\": \"/api/v1/targets/\"}','192.168.0.62','2026-01-29 00:21:39.918232',1),
-(71,'PATCH','Receivable','10','{\"body\": {\"client\": 4, \"analyst\": 12, \"report_date\": \"2026-01-01\", \"pos_account_count\": 0, \"pos_amount\": 0, \"neg_account_count\": 0, \"neg_amount\": 0}, \"status_code\": 200, \"path\": \"/api/v1/receivables/10/\"}','192.168.0.62','2026-01-29 00:21:39.921929',1),
-(72,'POST','Target',NULL,'{\"body\": {\"client\": 5, \"target_month\": \"2026-01-01\", \"internal_target\": 0, \"client_target\": 0}, \"status_code\": 201, \"path\": \"/api/v1/targets/\"}','192.168.0.62','2026-01-29 00:21:40.286660',1),
-(73,'PATCH','Receivable','7','{\"body\": {\"client\": 5, \"analyst\": 12, \"report_date\": \"2026-01-01\", \"pos_account_count\": 0, \"pos_amount\": 0, \"neg_account_count\": 0, \"neg_amount\": 0}, \"status_code\": 200, \"path\": \"/api/v1/receivables/7/\"}','192.168.0.62','2026-01-29 00:21:40.289126',1),
-(74,'POST','token',NULL,'{\"body\": {\"username\": \"admin\", \"password\": \"[REDACTED]\"}, \"status_code\": 401, \"path\": \"/api/token/\"}','127.0.0.1','2026-01-29 05:04:27.251228',NULL),
-(75,'LOGOUT','User','1','{\"message\": \"User logged out successfully\"}','192.168.0.62','2026-01-29 06:55:42.078977',1),
-(76,'LOGIN','User','1','{\"message\": \"User logged in successfully\"}','192.168.0.62','2026-01-29 06:55:45.265802',1);
 /*!40000 ALTER TABLE `core_auditlog` ENABLE KEYS */;
 UNLOCK TABLES;
 commit;
@@ -1059,7 +1187,7 @@ CREATE TABLE `django_content_type` (
   `model` varchar(100) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `django_content_type_app_label_model_76bd3d3b_uniq` (`app_label`,`model`)
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1070,6 +1198,9 @@ LOCK TABLES `django_content_type` WRITE;
 /*!40000 ALTER TABLE `django_content_type` DISABLE KEYS */;
 set autocommit=0;
 INSERT INTO `django_content_type` VALUES
+(18,'accounts','account'),
+(19,'accounts','columnmapping'),
+(20,'accounts','importschema'),
 (1,'admin','logentry'),
 (8,'analysts','analyst'),
 (3,'auth','group'),
@@ -1104,7 +1235,7 @@ CREATE TABLE `django_migrations` (
   `name` varchar(255) NOT NULL,
   `applied` datetime(6) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1150,7 +1281,9 @@ INSERT INTO `django_migrations` VALUES
 (33,'core','0003_initial','2026-01-23 07:02:08.286934'),
 (34,'core','0004_remove_passwordresetrequest_email_and_more','2026-01-23 07:39:11.614097'),
 (35,'core','0005_auditlog','2026-01-28 04:43:24.360100'),
-(36,'clients','0003_alter_client_client_name','2026-01-29 02:58:19.332627');
+(36,'clients','0003_alter_client_client_name','2026-01-29 02:58:19.332627'),
+(37,'accounts','0001_initial','2026-01-29 07:43:33.951587'),
+(38,'accounts','0002_importschema_columnmapping','2026-01-29 07:56:43.466612');
 /*!40000 ALTER TABLE `django_migrations` ENABLE KEYS */;
 UNLOCK TABLES;
 commit;
@@ -1204,7 +1337,7 @@ CREATE TABLE `payments_dailypayment` (
   KEY `payments_dailypayment_analyst_id_c6b9c735_fk_analysts_analyst_id` (`analyst_id`),
   CONSTRAINT `payments_dailypayment_analyst_id_c6b9c735_fk_analysts_analyst_id` FOREIGN KEY (`analyst_id`) REFERENCES `analysts_analyst` (`id`),
   CONSTRAINT `payments_dailypayment_client_id_e02cf1a2_fk_clients_client_id` FOREIGN KEY (`client_id`) REFERENCES `clients_client` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=36 DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1246,7 +1379,9 @@ INSERT INTO `payments_dailypayment` VALUES
 (32,'2026-01-28',0.00,'2026-01-28 05:52:13.986866',30,11),
 (33,'2026-01-28',0.00,'2026-01-28 05:52:13.993447',31,11),
 (34,'2026-01-28',0.00,'2026-01-28 05:52:13.999522',70,11),
-(35,'2026-01-28',0.00,'2026-01-28 05:52:14.006248',71,11);
+(35,'2026-01-28',0.00,'2026-01-28 05:52:14.006248',71,11),
+(36,'2026-01-30',123123.00,'2026-01-30 00:57:28.718849',72,14),
+(37,'2026-01-30',123123.00,'2026-01-30 00:58:26.667803',23,11);
 /*!40000 ALTER TABLE `payments_dailypayment` ENABLE KEYS */;
 UNLOCK TABLES;
 commit;
@@ -1270,7 +1405,7 @@ CREATE TABLE `ptp_dailyptp` (
   KEY `ptp_dailyptp_analyst_id_1d804c7a_fk_analysts_analyst_id` (`analyst_id`),
   CONSTRAINT `ptp_dailyptp_analyst_id_1d804c7a_fk_analysts_analyst_id` FOREIGN KEY (`analyst_id`) REFERENCES `analysts_analyst` (`id`),
   CONSTRAINT `ptp_dailyptp_client_id_98a9b7a4_fk_clients_client_id` FOREIGN KEY (`client_id`) REFERENCES `clients_client` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=36 DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1312,7 +1447,9 @@ INSERT INTO `ptp_dailyptp` VALUES
 (32,'2026-01-28',0.00,'2026-01-28 05:52:13.989714',30,11),
 (33,'2026-01-28',0.00,'2026-01-28 05:52:13.996318',31,11),
 (34,'2026-01-28',0.00,'2026-01-28 05:52:14.002401',70,11),
-(35,'2026-01-28',0.00,'2026-01-28 05:52:14.008962',71,11);
+(35,'2026-01-28',0.00,'2026-01-28 05:52:14.008962',71,11),
+(36,'2026-01-30',123123.00,'2026-01-30 00:57:28.722834',72,14),
+(37,'2026-01-30',123123.00,'2026-01-30 00:58:26.670810',23,11);
 /*!40000 ALTER TABLE `ptp_dailyptp` ENABLE KEYS */;
 UNLOCK TABLES;
 commit;
@@ -1566,4 +1703,4 @@ commit;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2026-01-29 14:59:04
+-- Dump completed on 2026-01-30  9:01:10
